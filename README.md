@@ -49,8 +49,6 @@ runRAND12App()
 
 ------------------------------------------------------------------------
 
-------------------------------------------------------------------------
-
 ## Web Application
 
 You can also access and run the full Shiny.RAND12 application online (no data is ever stored):
