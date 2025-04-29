@@ -1,6 +1,7 @@
 # Shiny.RAND12
 
 <!-- badges: start -->
+[![R-CMD-check](https://github.com/SondreNilsen/Shiny.RAND12/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/SondreNilsen/Shiny.RAND12/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 **RAND-12 Data Visualization Shiny App**
