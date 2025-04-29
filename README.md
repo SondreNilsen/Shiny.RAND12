@@ -54,7 +54,11 @@ runRAND12App()
 
 ### 📊 Summary Scores (PSC-12 & MSC-12) & Subdomain Profiles
 
-Visualize the PSC-12, MSC-12, and Subdomine Profiles with: - Histogram, density, boxplot, violin, jitter, raincloud, trend-line (observed, lm, loess) - Compare groups by any categorical variables - Add mean/median reference lines (grand and by group) - Coordinate flips, custom axis limits
+Visualize the PSC-12, MSC-12, and Subdomine Profiles with: 
+- Histogram, density, boxplot, violin, jitter, raincloud, trend-line (observed, lm, loess) 
+- Compare groups by any categorical variables 
+- Add mean/median reference lines (grand and by group) 
+- Coordinate flips, custom axis limits
 
 ### 🎨 Theming & Localization
 
