@@ -1,5 +1,8 @@
 # Shiny.RAND12
 
+<!-- badges: start -->
+<!-- badges: end -->
+
 **RAND-12 Data Visualization Shiny App**
 
 ------------------------------------------------------------------------
