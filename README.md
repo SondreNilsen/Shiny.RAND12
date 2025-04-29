@@ -85,24 +85,25 @@ These are declared in DESCRIPTION under `Imports`: and loaded quietly in the app
 
 ------------------------------------------------------------------------
 
-## Citation 
+## Citation
 
 If you use **Shiny.RAND12** in your work, please cite it as:
 
-> Nilsen, S. A. (2025). *Shiny.RAND12: Interactive RAND-12 Data Visualizer* (Version 0.1.0) [Software]. 
+> Nilsen, S. A. (2025). *Shiny.RAND12: RAND-12 Data Visualization Shiny App* (Version 0.1.0) [Software]. Zenodo. https://doi.org/10.5281/zenodo.15303336
 
 ### BibTeX
 
 ```bibtex
-@software{Nilsen2025ShinyEQ5D,
-  author       = {Nilsen, Sondre Aasen},
-  title        = {{Shiny.RAND12: Interactive RAND-12 Data Visualizer}},
-  version      = {0.1.0},
-  year         = {2025},
-  publisher    = {Zenodo},
-  doi          = {...},
-  url          = {...}
+@Software{Nilsen2025ShinyRAND12,
+  author    = {Nilsen, Sondre Aasen},
+  title     = {{Shiny.RAND12: RAND-12 Data Visualization Shiny App}},
+  version   = {0.1.0},
+  year      = {2025},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.15303336},
+  url       = {https://github.com/SondreNilsen/Shiny.RAND12}
 }
+
 ```
 ------------------------------------------------------------------------
 ## Issues & Feature Requests
