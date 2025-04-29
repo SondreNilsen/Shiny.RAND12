@@ -9,3 +9,4 @@ if (requireNamespace("pkgload", quietly = TRUE)) {
 # call the function that launches the Shiny app
 
 runRAND12App()
+

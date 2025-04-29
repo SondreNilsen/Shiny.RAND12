@@ -28,5 +28,7 @@ Imports:
     shiny,
     shinythemes,
     shinyWidgets,
-    tidyr
+    tidyr,
+    pkgload,
+    rstudioapi
 RoxygenNote: 7.3.2
