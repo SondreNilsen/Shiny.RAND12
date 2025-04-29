@@ -1,6 +1,7 @@
 # Shiny.RAND12
 
 <!-- badges: start -->
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15303336.svg)](https://doi.org/10.5281/zenodo.15303336)
 [![R-CMD-check](https://github.com/SondreNilsen/Shiny.RAND12/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/SondreNilsen/Shiny.RAND12/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
