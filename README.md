@@ -6,25 +6,25 @@
 
 ## Table of Contents
 
--   [Description](#description)\
--   [Installation](#installation)\
--   [Usage](#usage)\
--   [Features](#features)\
--   [Dependencies](#dependencies)\
--   [Citation](#citation)\
--   [Issues & Feature Requests](#issues--feature-requests)\
--   [License](#license)\
+-   [Description](#description)
+-   [Installation](#installation)
+-   [Usage](#usage)
+-   [Features](#features)
+-   [Dependencies](#dependencies)
+-   [Citation](#citation)
+-   [Issues & Feature Requests](#issues--feature-requests)
+-   [License](#license)
 -   [Contact](#contact)
 
 ------------------------------------------------------------------------
 
-## Description {#description}
+## Description
 
 **Shiny.RAND12** is an R package wrapping a Shiny application for simulating or uploading RAND-12 health survey data and generating publication-quality plots of summary and subdomain scores. It offers flexible plot types, language toggles (English/Norwegian), and one-click figure downloads (PDF/PNG).
 
 ------------------------------------------------------------------------
 
-## Installation {#installation}
+## Installation
 
 Install the development version from GitHub:
 
@@ -35,7 +35,7 @@ remotes::install_github("YOUR_USERNAME/Shiny.RAND12")
 
 ------------------------------------------------------------------------
 
-## Usage {#usage}
+## Usage
 
 ``` r
 library(Shiny.RAND12)
@@ -44,7 +44,7 @@ runRAND12App()
 
 ------------------------------------------------------------------------
 
-## Features {#features}
+## Features
 
 ### 📂 Data Upload & Preview
 
@@ -69,7 +69,7 @@ Visualize the PSC-12, MSC-12, and Subdomine Profiles with: - Histogram, density,
 
 ------------------------------------------------------------------------
 
-## Dependencies {#dependencies}
+## Dependencies
 
 The package imports these core R packages: shiny, shinythemes, shinyWidgets, ggplot2, dplyr, tidyr, colourpicker, RColorBrewer, ggsci, haven, readxl, readr, DT, ggrain
 
