@@ -33,8 +33,8 @@
 Install the development version from GitHub:
 
 ``` r
-install.packages("remotes")         # if you don’t already have it
-remotes::install_github("YOUR_USERNAME/Shiny.RAND12")
+install.packages("remotes") # if you don’t already have it
+remotes::install_github("SondreNilsen/Shiny.RAND12")
 ```
 
 ------------------------------------------------------------------------
@@ -122,5 +122,5 @@ This project is licensed under the **MIT License** – see the [LICENSE](LICENSE
 
 ------------------------------------------------------------------------
 
-*Created by Sondre Aasen Nilsen, on Behalf of Center for Patient-Reported Data, Haukeland University Hospital, Bergen, Norway*
-*Questions or feedback? Email: sondre.aa.nilsen@gmail.com*
+*Created by Sondre Aasen Nilsen, on Behalf of Center for Patient-Reported Data, Haukeland University Hospital, Bergen, Norway.*
+
