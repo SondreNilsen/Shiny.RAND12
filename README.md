@@ -49,6 +49,20 @@ runRAND12App()
 
 ------------------------------------------------------------------------
 
+------------------------------------------------------------------------
+
+## Web Application
+
+You can also access and run the full Shiny.RAND12 application online (no data is ever stored):
+
+🌐 **https://sondrenilsen.shinyapps.io/ShinyRAND12**
+
+> **Note:** All uploads in this hosted session are ephemeral—nothing is saved on the server.  
+> For sensitive data or full control over your files, see [Usage](#usage) to install and run the app locally.
+
+------------------------------------------------------------------------
+
+
 ## Features
 
 ### 📂 Data Upload & Preview
