@@ -1,0 +1,32 @@
+Package: Shiny.RAND12
+Type: Package
+Title: RAND-12 Data Visualization Shiny App
+Version: 0.1.0
+Authors@R: c(
+    person(
+      "Sondre Aasen", "Nilsen",
+      email = "sondre.aa.nilsen@gmail.com",
+      role = c("aut", "cre")
+    )
+  )
+Description: Provides a Shiny app (and helper functions) to simulate or upload RAND-12 health survey data, 
+  and generate a variety of publication-quality plots for physical and mental summary scores and subdomains.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Imports: 
+    colourpicker,
+    dplyr,
+    DT,
+    ggplot2,
+    ggrain,
+    ggsci,
+    haven,
+    RColorBrewer,
+    readr,
+    readxl,
+    shiny,
+    shinythemes,
+    shinyWidgets,
+    tidyr
+RoxygenNote: 7.3.2
