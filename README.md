@@ -118,10 +118,12 @@ Visualize the PSC-12, MSC-12, and Subdomain Profiles with:
 
 ## Screenshots
 
+- See a few example screenshots in the [`man/figures/`](man/figures/) folder.
+
 <table>
 <tr>
   <td align="center">
-    <strong>Health Profiles (Raincloud)</strong><br/>
+    <strong>PSC-12 & MSC-12</strong><br/>
     <img
       src="man/figures/Screenshot_subdomain_rain.png"
       alt="RAND-12 Physical Subdomain raincloud plot"
@@ -129,7 +131,7 @@ Visualize the PSC-12, MSC-12, and Subdomain Profiles with:
     />
   </td>
   <td align="center">
-    <strong>Summary Scores (Density)</strong><br/>
+    <strong>Subdomain Scores</strong><br/>
     <img
       src="man/figures/Screenshot_summary_density.png"
       alt="RAND-12 PSC-12 & MSC-12 density plot"
