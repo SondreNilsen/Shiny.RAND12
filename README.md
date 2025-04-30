@@ -125,17 +125,18 @@ Visualize the PSC-12, MSC-12, and Subdomain Profiles with:
   <td align="center">
     <strong>PSC-12 & MSC-12</strong><br/>
     <img
-      src="man/figures/Screenshot_subdomain_rain.png"
-      alt="RAND-12 Physical Subdomain raincloud plot"
+      src="man/figures/Screenshot_summary_density.png"
+      alt="RAND-12 PSC-12 & MSC-12 density plot"
       width="75%"
     />
   </td>
   <td align="center">
-    <strong>Subdomain Scores</strong><br/>
+    <strong>Subdomain scores</strong><br/>
     <img
-      src="man/figures/Screenshot_summary_density.png"
-      alt="RAND-12 PSC-12 & MSC-12 density plot"
+      src="man/figures/Screenshot_subdomain_rain.png"
+      alt="RAND-12 Physical Subdomain raincloud plot"
       width="75%"
+
     />
   </td>
 </tr>
