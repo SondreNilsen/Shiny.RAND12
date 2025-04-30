@@ -3,6 +3,8 @@
 <!-- badges: start -->
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15303336.svg)](https://doi.org/10.5281/zenodo.15303336)
 [![R-CMD-check](https://github.com/SondreNilsen/Shiny.RAND12/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/SondreNilsen/Shiny.RAND12/actions/workflows/R-CMD-check.yaml)
+![Offline Install](https://img.shields.io/badge/offline--install-ready-brightgreen)
+![Shiny App](https://img.shields.io/badge/Shiny_App-RAND--12-blue)
 <!-- badges: end -->
 
 **RAND-12 Data Visualization Shiny App**
@@ -34,10 +36,33 @@
 Install the development version from GitHub:
 
 ``` r
-install.packages("remotes") # if you don’t already have it
+#install.packages("remotes")
 remotes::install_github("SondreNilsen/Shiny.RAND12")
 ```
 
+### 🔒 Installing on Offline or Closed Servers
+
+If you're working on a server without access to GitHub (but with access to CRAN), you can still install the package from a `.tar.gz` source file.
+
+-   Download the `Shiny.RAND12_0.1.0.tar.gz` file from the [Releases page](https://github.com/SondreNilsen/Shiny.RAND12/releases).
+-   Install missing CRAN packages, if needed:
+
+```r
+required_pkgs <- c(
+  "shiny", "shinythemes", "shinyWidgets", "DT", "dplyr", "tidyr", "ggplot2",
+  "ggrain", "ggsci", "RColorBrewer", "readr", "readxl", "colourpicker",
+  "haven", "pkgload", "rstudioapi"
+)
+
+missing <- setdiff(required_pkgs, rownames(installed.packages()))
+if (length(missing)) install.packages(missing)
+```
+
+- Install the local `.tar.gz` file *(adjust the path as needed)*:
+
+```r
+install.packages("/path/to/Shiny.RAND12_0.1.0.tar.gz", repos = NULL, type = "source")
+```
 ------------------------------------------------------------------------
 
 ## Usage
@@ -71,7 +96,7 @@ You can also access and run the full Shiny.RAND12 application online (no data is
 
 ### 📊 Summary Scores (PSC-12 & MSC-12) & Subdomain Profiles
 
-Visualize the PSC-12, MSC-12, and Subdomine Profiles with: 
+Visualize the PSC-12, MSC-12, and Subdomain Profiles with: 
 - Histogram, density, boxplot, violin, jitter, raincloud, trend-line (observed, lm, loess) 
 - Compare groups by any categorical variables 
 - Add mean/median reference lines (grand and by group) 
@@ -123,9 +148,9 @@ If you use **Shiny.RAND12** in your work, please cite it as:
 
 If you encounter a bug or would like to request a new feature, please open an issue on GitHub:
 
-1. Go to the [Issues tab of this repository](https://github.com/SondreNilsen/Shiny.RAND12/issues).  
-2. Click **New issue**.  
-3. Choose “Bug report” or “Feature request,” fill in the template, and submit.
+1. Go to the [Issues tab of this repository](https://github.com/SondreNilsen/Shiny.RAND12/issues)  
+2. Click **New issue**  
+3. Choose “Bug report” or “Feature request,” fill in the template, and submit
 
 ------------------------------------------------------------------------
 
@@ -136,5 +161,5 @@ This project is licensed under the **MIT License** – see the [LICENSE](LICENSE
 
 ------------------------------------------------------------------------
 
-*Created by Sondre Aasen Nilsen, on Behalf of Center for Patient-Reported Data, Haukeland University Hospital, Bergen, Norway.*
+*Created by Sondre Aasen Nilsen, on behalf of the Center for Patient-Reported Data, Haukeland University Hospital, Bergen, Norway.*
 
