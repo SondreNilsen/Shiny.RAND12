@@ -17,6 +17,7 @@
 -   [Installation](#installation)
 -   [Usage](#usage)
 -   [Features](#features)
+-   [Screenshots](#screenshots)
 -   [Dependencies](#dependencies)
 -   [Citation](#citation)
 -   [Issues & Feature Requests](#issues--feature-requests)
@@ -112,6 +113,31 @@ Visualize the PSC-12, MSC-12, and Subdomain Profiles with:
 ### 📥 Download Publication-Quality Figures
 
 -   One-click export to PDF or PNG at custom dimensions and resolution
+
+------------------------------------------------------------------------
+
+## Screenshots
+
+<table>
+<tr>
+  <td align="center">
+    <strong>Health Profiles (Raincloud)</strong><br/>
+    <img
+      src="man/figures/Screenshot_subdomain_rain.png"
+      alt="RAND-12 Physical Subdomain raincloud plot"
+      width="75%"
+    />
+  </td>
+  <td align="center">
+    <strong>Summary Scores (Density)</strong><br/>
+    <img
+      src="man/figures/Screenshot_summary_density.png"
+      alt="RAND-12 PSC-12 & MSC-12 density plot"
+      width="75%"
+    />
+  </td>
+</tr>
+</table>
 
 ------------------------------------------------------------------------
 
