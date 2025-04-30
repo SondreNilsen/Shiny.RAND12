@@ -41,8 +41,8 @@ norwegian_labels <- c(
   SF = "Sosial funksjon",
   RE = "Emosjonell rollefunksjon",
   MH = "Mental helse",
-  physical_sum = "PSC-12 (Fysisk totalskåre)",
-  mental_sum   = "MSC-12 (Mental totalskåre)"
+  physical_sum = "PSC-12 (Fysisk Totalskåre)",
+  mental_sum   = "MSC-12 (Mental Totalskåre)"
 )
 
 # ===== Data Simulation =====
@@ -53,121 +53,115 @@ n_total <- n_per_year * length(years)
 
 # background variables
 sim_data <- data.frame(
-  årstall = rep(years, each = n_per_year),
-  kjønn = sample(c("Mann", "Kvinne"), n_total, replace = TRUE, prob = c(0.48, 0.52)),
-  aldersgruppe = sample(c("<30", "30-39", "40-49", "50-59", "60-69", "70+"), n_total, replace = TRUE,
-                        prob = c(0.15, 0.2, 0.2, 0.2, 0.15, 0.1)),
-  utdanning = sample(c("Lav", "Middels", "Høy"), n_total, replace = TRUE, prob = c(0.3, 0.4, 0.3)),
-  behandlingsstatus = sample(c("Under behandling", "Ingen behandling", "Ukjent"), n_total, replace = TRUE,
-                             prob = c(0.6, 0.3, 0.1))
+  year = rep(years, each = n_per_year),
+  gender = sample(c("Male", "Female"), n_total, replace = TRUE, prob = c(0.48, 0.52)),
+  age_group = sample(c("<30", "30-39", "40-49", "50-59", "60-69", "70+"), n_total, replace = TRUE,
+                     prob = c(0.15, 0.2, 0.2, 0.2, 0.15, 0.1)),
+  education = sample(c("Low", "Medium", "High"), n_total, replace = TRUE, prob = c(0.3, 0.4, 0.3)),
+  treatment_status = sample(c("In treatment", "No treatment", "Unknown"), n_total, replace = TRUE,
+                            prob = c(0.6, 0.3, 0.1))
 )
+
 # Diagnosis variables
 diagnosis_levels <- paste("diagnosis", 1:15)
 sim_data$diagnosis <- sample(diagnosis_levels, n_total, replace = TRUE)
 sim_data$diagnosis <- factor(sim_data$diagnosis, levels = diagnosis_levels)
+
 # Define diagnosis effects for physical and mental scores
 diagnosis_effect_physical <- setNames(seq(10, -10, length.out = 15), diagnosis_levels)
 diagnosis_effect_mental   <- setNames(seq(8, -8, length.out = 15), diagnosis_levels)
 
-# Add continuous age variable "Alder_num"
+# Add continuous age variable
 sim_data <- sim_data %>%
   rowwise() %>%
-  mutate(Alder_num = case_when(
-    aldersgruppe == "<30"  ~ runif(1, 18, 29),
-    aldersgruppe == "30-39" ~ runif(1, 30, 39),
-    aldersgruppe == "40-49" ~ runif(1, 40, 49),
-    aldersgruppe == "50-59" ~ runif(1, 50, 59),
-    aldersgruppe == "60-69" ~ runif(1, 60, 69),
-    aldersgruppe == "70+"   ~ runif(1, 70, 85)
+  mutate(age_num = case_when(
+    age_group == "<30"   ~ runif(1, 18, 29),
+    age_group == "30-39" ~ runif(1, 30, 39),
+    age_group == "40-49" ~ runif(1, 40, 49),
+    age_group == "50-59" ~ runif(1, 50, 59),
+    age_group == "60-69" ~ runif(1, 60, 69),
+    age_group == "70+"   ~ runif(1, 70, 85)
   )) %>%
   ungroup()
 
-# Convert categorical variables to factors with meaningful order
-sim_data$aldersgruppe <- factor(sim_data$aldersgruppe, levels = c("<30", "30-39", "40-49", "50-59", "60-69", "70+"))
-sim_data$utdanning <- factor(sim_data$utdanning, levels = c("Lav", "Middels", "Høy"))
-sim_data$behandlingsstatus <- factor(sim_data$behandlingsstatus, levels = c("Under behandling", "Ingen behandling", "Ukjent"))
-sim_data$kjønn <- factor(sim_data$kjønn, levels = c("Mann", "Kvinne"))
+# Set factor levels
+sim_data$age_group <- factor(sim_data$age_group, levels = c("<30", "30-39", "40-49", "50-59", "60-69", "70+"))
+sim_data$education <- factor(sim_data$education, levels = c("Low", "Medium", "High"))
+sim_data$treatment_status <- factor(sim_data$treatment_status, levels = c("In treatment", "No treatment", "Unknown"))
+sim_data$gender <- factor(sim_data$gender, levels = c("Male", "Female"))
 
-# Define effects for physical subscales (PF, RP, BP, GH)
+# Define effects for physical subscales
 age_effect_physical <- c("<30" = 0, "30-39" = -2, "40-49" = -4, "50-59" = -6, "60-69" = -8, "70+" = -10)
-gender_effect_physical <- c("Mann" = 0, "Kvinne" = -10)
-edu_effect <- c("Lav" = -5, "Middels" = 0, "Høy" = 10)
-treatment_effect_physical <- c("Under behandling" = 7, "Ingen behandling" = -4, "Ukjent" = 0)
+gender_effect_physical <- c("Male" = 0, "Female" = -10)
+edu_effect <- c("Low" = -5, "Medium" = 0, "High" = 10)
+treatment_effect_physical <- c("In treatment" = 7, "No treatment" = -4, "Unknown" = 0)
 
-# Year effect: scores increase over time
-sim_data <- sim_data %>% mutate(year_effect = (årstall - 2019) * 1.5)
+# Year effect
+sim_data <- sim_data %>% mutate(year_effect = (year - 2019) * 1.5)
 
-# Simulate physical subscale scores: PF, RP, BP, GH
+# Simulate physical subscale scores
 sim_data <- sim_data %>%
   mutate(
-    PF = 60 + as.numeric(age_effect_physical[as.character(aldersgruppe)]) +
-      gender_effect_physical[as.character(kjønn)] +
-      edu_effect[as.character(utdanning)] +
-      treatment_effect_physical[as.character(behandlingsstatus)] +
-      diagnosis_effect_physical[as.character(diagnosis)] +  # Added diagnosis effect
-      year_effect + rnorm(n_total, 0, 5),
-    RP = 55 + as.numeric(age_effect_physical[as.character(aldersgruppe)]) +
-      gender_effect_physical[as.character(kjønn)] +
-      edu_effect[as.character(utdanning)] +
-      treatment_effect_physical[as.character(behandlingsstatus)] +
-      diagnosis_effect_physical[as.character(diagnosis)] +  # Added diagnosis effect
-      year_effect + rnorm(n_total, 0, 5),
-    BP = 35 + as.numeric(age_effect_physical[as.character(aldersgruppe)]) +
-      gender_effect_physical[as.character(kjønn)] +
-      edu_effect[as.character(utdanning)] +
-      treatment_effect_physical[as.character(behandlingsstatus)] +
-      diagnosis_effect_physical[as.character(diagnosis)] +  # Added diagnosis effect
-      year_effect + rnorm(n_total, 0, 5),
-    GH = 40 + as.numeric(age_effect_physical[as.character(aldersgruppe)]) +
-      gender_effect_physical[as.character(kjønn)] +
-      edu_effect[as.character(utdanning)] +
-      treatment_effect_physical[as.character(behandlingsstatus)] +
-      diagnosis_effect_physical[as.character(diagnosis)] +  # Added diagnosis effect
-      year_effect + rnorm(n_total, 0, 5)
+    PF = 60 + age_effect_physical[as.character(age_group)] +
+      gender_effect_physical[as.character(gender)] +
+      edu_effect[as.character(education)] +
+      treatment_effect_physical[as.character(treatment_status)] +
+      diagnosis_effect_physical[as.character(diagnosis)] + year_effect + rnorm(n_total, 0, 5),
+    RP = 55 + age_effect_physical[as.character(age_group)] +
+      gender_effect_physical[as.character(gender)] +
+      edu_effect[as.character(education)] +
+      treatment_effect_physical[as.character(treatment_status)] +
+      diagnosis_effect_physical[as.character(diagnosis)] + year_effect + rnorm(n_total, 0, 5),
+    BP = 35 + age_effect_physical[as.character(age_group)] +
+      gender_effect_physical[as.character(gender)] +
+      edu_effect[as.character(education)] +
+      treatment_effect_physical[as.character(treatment_status)] +
+      diagnosis_effect_physical[as.character(diagnosis)] + year_effect + rnorm(n_total, 0, 5),
+    GH = 40 + age_effect_physical[as.character(age_group)] +
+      gender_effect_physical[as.character(gender)] +
+      edu_effect[as.character(education)] +
+      treatment_effect_physical[as.character(treatment_status)] +
+      diagnosis_effect_physical[as.character(diagnosis)] + year_effect + rnorm(n_total, 0, 5)
   )
 
-# Define effects for mental subscales (VT, SF, RE, MH)
-gender_effect_mental <- c("Mann" = 0, "Kvinne" = -10)
-treatment_effect_mental <- c("Under behandling" = 5, "Ingen behandling" = -6, "Ukjent" = 0)
+# Define effects for mental subscales
+gender_effect_mental <- c("Male" = 0, "Female" = -10)
+treatment_effect_mental <- c("In treatment" = 5, "No treatment" = -6, "Unknown" = 0)
 
 sim_data <- sim_data %>%
   mutate(
-    VT = 56 + gender_effect_mental[as.character(kjønn)] +
-      edu_effect[as.character(utdanning)] +
-      treatment_effect_mental[as.character(behandlingsstatus)] +
-      diagnosis_effect_mental[as.character(diagnosis)] +  # Added diagnosis effect
-      year_effect + rnorm(n_total, 0, 5),
-    SF = 40 + gender_effect_mental[as.character(kjønn)] +
-      edu_effect[as.character(utdanning)] +
-      treatment_effect_mental[as.character(behandlingsstatus)] +
-      diagnosis_effect_mental[as.character(diagnosis)] +  # Added diagnosis effect
-      year_effect + rnorm(n_total, 0, 5),
-    RE = 35 + gender_effect_mental[as.character(kjønn)] +
-      edu_effect[as.character(utdanning)] +
-      treatment_effect_mental[as.character(behandlingsstatus)] +
-      diagnosis_effect_mental[as.character(diagnosis)] +  # Added diagnosis effect
-      year_effect + rnorm(n_total, 0, 5),
-    MH = 60 + gender_effect_mental[as.character(kjønn)] +
-      edu_effect[as.character(utdanning)] +
-      treatment_effect_mental[as.character(behandlingsstatus)] +
-      diagnosis_effect_mental[as.character(diagnosis)] +  # Added diagnosis effect
-      year_effect + rnorm(n_total, 0, 5)
+    VT = 56 + gender_effect_mental[as.character(gender)] +
+      edu_effect[as.character(education)] +
+      treatment_effect_mental[as.character(treatment_status)] +
+      diagnosis_effect_mental[as.character(diagnosis)] + year_effect + rnorm(n_total, 0, 5),
+    SF = 40 + gender_effect_mental[as.character(gender)] +
+      edu_effect[as.character(education)] +
+      treatment_effect_mental[as.character(treatment_status)] +
+      diagnosis_effect_mental[as.character(diagnosis)] + year_effect + rnorm(n_total, 0, 5),
+    RE = 35 + gender_effect_mental[as.character(gender)] +
+      edu_effect[as.character(education)] +
+      treatment_effect_mental[as.character(treatment_status)] +
+      diagnosis_effect_mental[as.character(diagnosis)] + year_effect + rnorm(n_total, 0, 5),
+    MH = 60 + gender_effect_mental[as.character(gender)] +
+      edu_effect[as.character(education)] +
+      treatment_effect_mental[as.character(treatment_status)] +
+      diagnosis_effect_mental[as.character(diagnosis)] + year_effect + rnorm(n_total, 0, 5)
   )
 
-# Bound the subscale scores between 0 and 100
+# Bound the subscale scores
 sim_data <- sim_data %>% mutate_at(vars(PF, RP, BP, GH, VT, SF, RE, MH), ~ pmax(pmin(., 100), 0))
 
-# Compute summary scores: physical_sum and mental_sum
+# Compute summary scores
 sim_data <- sim_data %>%
   mutate(
     physical_sum = rowMeans(select(., PF, RP, BP, GH), na.rm = TRUE),
-    mental_sum = rowMeans(select(., VT, SF, RE, MH), na.rm = TRUE)
+    mental_sum   = rowMeans(select(., VT, SF, RE, MH), na.rm = TRUE)
   )
 
-# Remove helper variable year_effect
+# Remove helper
 sim_data$year_effect <- NULL
 
-# Convert data to long format
+# Convert to long
 simulated_long <- sim_data %>% pivot_longer(
   cols = c(PF, RP, BP, GH, VT, SF, RE, MH, physical_sum, mental_sum),
   names_to = "subscale",
@@ -177,7 +171,6 @@ simulated_long <- sim_data %>% pivot_longer(
 # Identify categorical variables
 group_vars <- names(simulated_long)[sapply(simulated_long, function(x) is.factor(x) || is.character(x))]
 group_vars <- setdiff(group_vars, "subscale")
-
 
 # ===== UI =====
 
