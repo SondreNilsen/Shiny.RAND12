@@ -162,17 +162,23 @@ If you use **Shiny.RAND12** in your work, please cite it as:
 ### BibTeX
 
 ```bibtex
-@Software{Nilsen2025ShinyRAND12,
+@Manual{Nilsen2025ShinyRAND12,
+  title     = {Shiny.RAND12: RAND-12 Data Visualization Shiny App},
   author    = {Nilsen, Sondre Aasen},
-  title     = {{Shiny.RAND12: RAND-12 Data Visualization Shiny App}},
-  version   = {0.1.0},
   year      = {2025},
-  publisher = {Zenodo},
+  version   = {0.1.0},
   doi       = {10.5281/zenodo.15303336},
-  url       = {https://github.com/SondreNilsen/Shiny.RAND12}
+  url       = {https://github.com/SondreNilsen/Shiny.RAND12},
+  note      = {Zenodo. https://doi.org/10.5281/zenodo.15303336}
 }
-
 ```
+
+> You can also get this citation straight from R. At the R prompt run:
+
+```r
+citation("Shiny.RAND12")
+```
+
 ------------------------------------------------------------------------
 ## Issues & Feature Requests
 
