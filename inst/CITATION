@@ -1,11 +1,10 @@
-cff-version: 1.1.0
-message: "If you use this software, please cite it as below."
-authors:
-  - family-names: "Nilsen"
-    given-names: "Sondre Aasen"
-    orcid: "https://orcid.org/0000-0002-3179-1277"
-title: "Shiny.RAND12: RAND-12 Data Visualization Shiny App"
-version: v0.1.0
-doi: 10.5281/zenodo.15303336
-date-released: 2025-04-29
-url: "https://github.com/SondreNilsen/Shiny.RAND12"
+citHeader("To cite Shiny.RAND12 in publications, please use:")
+
+citEntry(
+  entry   = "Software",
+  title   = "Shiny.RAND12: RAND-12 Data Visualization Shiny App",
+  author  = person("Sondre Aasen", "Nilsen", role = c("aut", "cre")),
+  version = "0.1.0",
+  doi     = "10.5281/zenodo.15303336",
+  url     = "https://github.com/SondreNilsen/Shiny.RAND12"
+)
