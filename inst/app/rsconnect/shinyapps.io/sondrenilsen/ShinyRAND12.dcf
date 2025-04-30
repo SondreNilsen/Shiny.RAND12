@@ -5,6 +5,6 @@ account: sondrenilsen
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 14643553
-bundleId: 10199736
+bundleId: 10205423
 url: https://sondrenilsen.shinyapps.io/ShinyRAND12/
 version: 1
