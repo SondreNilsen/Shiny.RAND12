@@ -173,7 +173,7 @@ If you use **Shiny.RAND12** in your work, please cite it as:
 }
 ```
 
-> You can also get this citation straight from R. At the R prompt run:
+You can also get this citation straight from R:
 
 ```r
 citation("Shiny.RAND12")
