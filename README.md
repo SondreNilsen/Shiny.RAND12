@@ -190,7 +190,18 @@ If you encounter a bug or would like to request a new feature, please open an is
 
 ------------------------------------------------------------------------
 
+## Standalone R Script
 
+If you prefer working directly in R, you can use a standalone script to create many of the same plots available in the Shiny app.
+
+📄 **Download the script:**  
+[`RAND12_script.R`](https://github.com/SondreNilsen/Shiny.RAND12/blob/main/extras/RAND12_script.R)
+
+📖 **View the interactive user manual:**  
+[RAND12_user_manual.html](https://sondrenilsen.github.io/Shiny.RAND12/RAND12_user_manual.html)
+
+
+------------------------------------------------------------------------
 ## License
 
 This project is licensed under the **MIT License** – see the [LICENSE](LICENSE.md) file for details.

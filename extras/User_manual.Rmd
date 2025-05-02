@@ -1,0 +1,825 @@
+---
+title: "RAND-12 Datavisualizations"
+author: "Sondre Nilsen"
+date: "2025-03-24"
+output:
+  rmdformats::readthedown:
+    cards: T
+    code_folding: hide
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+# Overview
+
+This document demonstrates how to create various visualizations of the RAND12 instrument using **`ggplot2`** in R.  
+It also serves as a `user manual` for an accompanying clean R script that you can download separately.
+
+Each section includes an explanation followed by the corresponding code.  
+Click the **Code** button in the bottom right corner to display the code for each step/plot we are making.
+
+# 1. Setup
+
+## Installing and Loading Packages
+
+Before we start, we need to install and load the required packages to run the script.  
+The code below creates a list of the names of all packages we need.  
+The next part checks if you have these packages installed, and if not, installs them—before they are loaded into R.
+
+```{r setup, message=FALSE, warning=FALSE}
+packages <- c(
+  "ggplot2", "dplyr", "tidyr", "ggsci", "ggrain",
+  "viridis", "hrbrthemes", "ggsignif"
+)
+new.packages <- packages[!(packages %in% installed.packages()[, "Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
+# Load all the packages without printing the output
+invisible(lapply(packages, library, character.only = TRUE))
+
+
+
+```
+
+## Defining a Custom Theme
+
+The default theme of ggplot has a gray background designed to make graphical elements “pop” out.
+For a cleaner look, we define our own custom theme that we will use for all figures.
+By defining theme_nice(), we can use this function in all our plots by adding + theme_nice(), saving time and ensuring consistency.
+
+
+```{r}
+# Define a custom theme function based on theme_bw()
+theme_nice <- function(base_size = 10) {
+  theme_bw(base_size = base_size) +
+    theme(
+      panel.grid       = element_blank(),
+      strip.background = element_blank(),
+      strip.text       = element_text(size = base_size)
+    )
+}
+  
+
+```
+
+
+## Defining Dimension and Response Level Labels
+
+To easily add dimension and response level labels/names to our plots, we create vectors of dimension labels and response level labels.
+Below we specify both English and Norwegian versions, so you can switch between them as needed.
+
+
+```{r}
+# English labels
+english_labels <- c(
+  PF = "Physical Functioning",
+  RP = "Role-Physical",
+  BP = "Bodily Pain",
+  GH = "General Health",
+  VT = "Vitality",
+  SF = "Social Functioning",
+  RE = "Role-Emotional",
+  MH = "Mental Health",
+  physical_sum = "PSC-12 (Physical Total Score)",
+  mental_sum   = "MSC-12 (Mental Total Score)"
+)
+
+# Norwegian labels
+norwegian_labels <- c(
+  PF = "Fysisk funksjon",
+  RP = "Fysisk rollefunksjon",
+  BP = "Kroppssmerter",
+  GH = "Generell helse",
+  VT = "Vitalitet",
+  SF = "Sosial funksjon",
+  RE = "Emosjonell rollefunksjon",
+  MH = "Mental helse",
+  physical_sum = "PSC-12 (Fysisk Totalskåre)",
+  mental_sum   = "MSC-12 (Mental Totalskåre)"
+)
+
+
+
+```
+
+
+# 2. Loading Your Own Data (Optional)
+
+If you have your own RAND12 dataset, you can use the code below to load it here.
+Your data should be in standard wide format—each RAND-12 dimension must be stored as its own variable (column).
+The dataset you upload must already include correctly scored RAND-12 variables.  The summary scores should be pre-scored according to the official RAND-12 algorithm (e.g., standardized T-scores with mean = 50, SD = 10).
+This script does not perform scoring – it only visualizes existing scores.
+
+| Variable       | Description                         | Scale (numeric, theoretical range) | Note                                                               |
+| -------------- | ----------------------------------- | ---------------------------------- | ------------------------------------------------------------------ |
+| `PF`           | Physical Functioning                | 0–100                              | Higher scores = better physical functioning                        |
+| `RP`           | Role-Physical                       | 0–100                              | Higher scores = fewer limitations in physical roles                |
+| `BP`           | Bodily Pain                         | 0–100                              | Higher scores = less pain                                          |
+| `GH`           | General Health                      | 0–100                              | Higher scores = better perceived general health                    |
+| `VT`           | Vitality                            | 0–100                              | Higher scores = more energy, less fatigue                          |
+| `SF`           | Social Functioning                  | 0–100                              | Higher scores = better ability to engage socially                  |
+| `RE`           | Role-Emotional                      | 0–100                              | Higher scores = fewer emotional role limitations                   |
+| `MH`           | Mental Health                       | 0–100                              | Higher scores = better psychological well-being                    |
+| `physical_sum` | Physical Component Summary (PSC-12) | Typically \~0–100 (T-score)        | Higher scores = better overall physical health; must be pre-scored |
+| `mental_sum`   | Mental Component Summary (MSC-12)   | Typically \~0–100 (T-score)        | Higher scores = better overall mental health; must be pre-scored   |
+
+
+
+
+Below are commented code examples for loading data from different file formats.
+Uncomment the relevant lines and modify the file path as needed.
+
+```{r}
+# For SPSS (.sav):
+# library(haven)
+# df <- read_sav("your_data.sav") %>%
+#         mutate(across(where(is.labelled), as_factor))
+
+# For Stata (.dta):
+# library(haven)
+# df <- read_dta("your_data.dta")
+
+# For Excel (.xls/.xlsx):
+# library(readxl)
+# df <- read_excel("your_data.xlsx")
+
+# For CSV (.csv):
+# library(readr)
+# df <- read_csv("your_data.csv")
+
+```
+
+# 3. Data Simulation (skip if using own data)
+
+In order to have some data to showcase the various ways to visualize the RAND-12 instrument, we simulate a dataset of 3,500 responses across seven years (2019–2025). The dataset includes demographic variables such as gender, age group, education, treatment status, and diagnosis. We also include linear year effects and predefined group-level effects to mimic realistic variation in physical and mental health domains.
+If you’re using your own RAND-12 data, you can skip this section.
+
+
+```{r}
+set.seed(123)
+n_per_year <- 500
+years <- 2019:2025
+n_total <- n_per_year * length(years)
+
+df <- data.frame(
+  year = rep(years, each = n_per_year),
+  gender = sample(c("Male", "Female"), n_total, replace = TRUE, prob = c(0.48, 0.52)),
+  age_group = sample(c("<30", "30-39", "40-49", "50-59", "60-69", "70+"), n_total, replace = TRUE,
+                     prob = c(0.15, 0.2, 0.2, 0.2, 0.15, 0.1)),
+  education = sample(c("Low", "Medium", "High"), n_total, replace = TRUE, prob = c(0.3, 0.4, 0.3)),
+  treatment_status = sample(c("In treatment", "No treatment", "Unknown"), n_total, replace = TRUE,
+                            prob = c(0.6, 0.3, 0.1))
+)
+
+diagnosis_levels <- paste("diagnosis", 1:15)
+df$diagnosis <- sample(diagnosis_levels, n_total, replace = TRUE)
+df$diagnosis <- factor(df$diagnosis, levels = diagnosis_levels)
+
+diagnosis_effect_physical <- setNames(seq(10, -10, length.out = 15), diagnosis_levels)
+diagnosis_effect_mental   <- setNames(seq(8, -8, length.out = 15), diagnosis_levels)
+
+df <- df %>%
+  rowwise() %>%
+  mutate(age_num = case_when(
+    age_group == "<30"   ~ runif(1, 18, 29),
+    age_group == "30-39" ~ runif(1, 30, 39),
+    age_group == "40-49" ~ runif(1, 40, 49),
+    age_group == "50-59" ~ runif(1, 50, 59),
+    age_group == "60-69" ~ runif(1, 60, 69),
+    age_group == "70+"   ~ runif(1, 70, 85)
+  )) %>%
+  ungroup()
+
+df$age_group <- factor(df$age_group, levels = c("<30", "30-39", "40-49", "50-59", "60-69", "70+"))
+df$education <- factor(df$education, levels = c("Low", "Medium", "High"))
+df$treatment_status <- factor(df$treatment_status, levels = c("In treatment", "No treatment", "Unknown"))
+df$gender <- factor(df$gender, levels = c("Male", "Female"))
+
+age_effect_physical <- c("<30" = 0, "30-39" = -2, "40-49" = -4, "50-59" = -6, "60-69" = -8, "70+" = -10)
+gender_effect_physical <- c("Male" = 0, "Female" = -10)
+edu_effect <- c("Low" = -5, "Medium" = 0, "High" = 10)
+treatment_effect_physical <- c("In treatment" = 7, "No treatment" = -4, "Unknown" = 0)
+
+df <- df %>% mutate(year_effect = (year - 2019) * 1.5)
+
+df <- df %>%
+  mutate(
+    PF = 60 + age_effect_physical[age_group] + gender_effect_physical[gender] +
+      edu_effect[education] + treatment_effect_physical[treatment_status] +
+      diagnosis_effect_physical[diagnosis] + year_effect + rnorm(n_total, 0, 5),
+    RP = 55 + age_effect_physical[age_group] + gender_effect_physical[gender] +
+      edu_effect[education] + treatment_effect_physical[treatment_status] +
+      diagnosis_effect_physical[diagnosis] + year_effect + rnorm(n_total, 0, 5),
+    BP = 35 + age_effect_physical[age_group] + gender_effect_physical[gender] +
+      edu_effect[education] + treatment_effect_physical[treatment_status] +
+      diagnosis_effect_physical[diagnosis] + year_effect + rnorm(n_total, 0, 5),
+    GH = 40 + age_effect_physical[age_group] + gender_effect_physical[gender] +
+      edu_effect[education] + treatment_effect_physical[treatment_status] +
+      diagnosis_effect_physical[diagnosis] + year_effect + rnorm(n_total, 0, 5)
+  )
+
+gender_effect_mental <- c("Male" = 0, "Female" = -10)
+treatment_effect_mental <- c("In treatment" = 5, "No treatment" = -6, "Unknown" = 0)
+
+df <- df %>%
+  mutate(
+    VT = 56 + gender_effect_mental[gender] + edu_effect[education] +
+      treatment_effect_mental[treatment_status] + diagnosis_effect_mental[diagnosis] +
+      year_effect + rnorm(n_total, 0, 5),
+    SF = 40 + gender_effect_mental[gender] + edu_effect[education] +
+      treatment_effect_mental[treatment_status] + diagnosis_effect_mental[diagnosis] +
+      year_effect + rnorm(n_total, 0, 5),
+    RE = 35 + gender_effect_mental[gender] + edu_effect[education] +
+      treatment_effect_mental[treatment_status] + diagnosis_effect_mental[diagnosis] +
+      year_effect + rnorm(n_total, 0, 5),
+    MH = 60 + gender_effect_mental[gender] + edu_effect[education] +
+      treatment_effect_mental[treatment_status] + diagnosis_effect_mental[diagnosis] +
+      year_effect + rnorm(n_total, 0, 5)
+  )
+
+df <- df %>%
+  mutate(across(c(PF, RP, BP, GH, VT, SF, RE, MH), ~ pmax(pmin(., 100), 0)))
+
+df <- df %>%
+  mutate(
+    physical_sum = rowMeans(select(., PF, RP, BP, GH), na.rm = TRUE),
+    mental_sum   = rowMeans(select(., VT, SF, RE, MH), na.rm = TRUE)
+  )
+
+df$year_effect <- NULL
+
+```
+
+# 4. Data Preparation
+Here, we convert our dataset from a wide format (where each RAND-12 subscale is stored in its own column) to a long format.
+This transformation is necessary to efficiently create faceted plots in ggplot2, allowing us to loop over subscales in a tidy, structured way.
+
+Below, you can preview how the data looks before and after pivoting:
+
+```{r}
+df_long <- df %>%
+  pivot_longer(
+    cols = c(PF, RP, BP, GH, VT, SF, RE, MH, physical_sum, mental_sum),
+    names_to = "subscale",
+    values_to = "score"
+  )
+# View data before pivot
+head(df)
+
+# View data after pivot
+head(df_long)
+
+```
+
+
+
+# 5. The PSC-12 and MSC-12 summary scores
+
+Having followed the steps above, we are now ready to create data visualizations.
+We will start by plotting the PSC-12 and MSC-12 summary dimensions. Due to the transformation of the data into long format above,
+we can now easily plot these side by side using facets - meaning that the plotting area is subdivided into two panels representing each summary dimension. 
+
+## PLOT 1: Density plots
+
+How it works: 
+
+- `filter(subscale %in% c("physical_sum", "mental_sum"))` selects only the PSC-12 and MSC-12 summary scales for plotting
+- `geom_density` adds the density curve for each scale
+- `fill = "#A4A9AD"` manually sets colour - change as you like
+- for Norwegian labels, change `as_labeller(english_labels)` to `as_labeller(norwegian_labels)`
+
+```{r, fig.height=8, fig.width= 12}
+p1 <- ggplot(df_long %>% filter(subscale %in% c("physical_sum", "mental_sum")),
+             aes(x = score)) +
+  geom_density(fill = "#A4A9AD", alpha = 0.8, color = "white") +
+  facet_wrap(~ subscale, labeller = as_labeller(english_labels)) +
+# facet_wrap(~ subscale, labeller = as_labeller(norwegian_labels)) uncomment to get Norwegian labels
+  labs(title = "Distribution of Summary Scores",
+       x = "Score", y = "Density") +
+  theme_nice()
+
+# ggsave("p1_summary_density.pdf", p1, width = 13, height = 8)
+
+p1
+
+```
+
+## PLOT 2: Density plots with group comparisons. 
+
+Plot 1 can easily be adapted to add group comparisons. Note that all comparisons respect the faceting, and are thus performed within each facet
+
+How it works: 
+
+- Within the global aesthetic mapping `aes()`, we add `fill = education` to compare groups by using colour of the curve.
+- `scale_fill_uchicago()` defines the fill palette. write `scale_fill_`  to see other options based on the packages loaded. 
+
+```{r, fig.height=8, fig.width= 14}
+
+p2 <- ggplot(df_long %>% filter(subscale %in% c("physical_sum", "mental_sum")),
+             aes(x = score, fill = education)) +
+  geom_density(alpha = 0.7, color = NA) +
+  facet_wrap(~ subscale, labeller = as_labeller(english_labels)) +
+  scale_fill_uchicago() +
+  labs(title = "Summary Scores by Education",
+       x = "Score", y = "Density", fill = "Education") +
+  theme_nice()
+# facet_wrap(~ subscale, labeller = as_labeller(norwegian_labels)) # optional
+# ggsave("p2_summary_density_education.pdf", p2, width = 13, height = 8)
+
+
+p2
+```
+
+## PLOT 3: Violin + Boxplot 
+
+Boxplots can be handy as they provide some summary statistics (median, IQR, outliers), but may miss important aspects of the data distribution—such as skewness or uneven spread. Combining boxplots with violin plots adds a density curve, helping to visualize the overall shape and variability more clearly.
+Notice that ggplot works like a blank canvas, allowing us to layer multiple geometries.
+
+How it works: 
+
+- `geom_violin(alpha = 0.5, color = NA)` draws a smooth density shape for each group; alpha = 0.5 makes the fill semi-transparent so elements beneath (like the boxplot) remain visible
+- `geom_boxplot(width = 0.2, color = "black", alpha = 0.8`) overlays a narrower boxplot; `width = 0.2 `controls how wide the box is (smaller width keeps it centered inside the violin), and `alpha = 0.8` makes it slightly transparent for better visual layering without losing clarity
+
+
+
+
+```{r, fig.height=8, fig.width= 14}
+p3 <- ggplot(df_long %>% filter(subscale %in% c("physical_sum", "mental_sum")),
+             aes(x = education, y = score, fill = education)) +
+  geom_violin(alpha = 0.5, color = NA) +
+  geom_boxplot(width = 0.2, color = "black", alpha = 0.8) +
+  scale_fill_uchicago() +
+  facet_wrap(~ subscale, labeller = as_labeller(english_labels)) +
+  labs(title = "Summary Scores by Education",
+       x = "Education", y = "Score", fill = "Education") +
+  theme_nice()
+# facet_wrap(~ subscale, labeller = as_labeller(norwegian_labels)) # optional
+# ggsave("p3_summary_box_violin.pdf", p3, width = 13, height = 8)
+
+p3
+```
+
+
+## Plot 3.2: Group Comparisons with Significance Tests
+
+Plots like the one above, where the focus is on comparing groups, can also incorporate formal significance testing directly within `ggplot2()`.  
+The `ggsignif` package is an add-on for ggplot that enables the addition of significance brackets. In the example below, we specify pairwise comparisons between all levels of education. Due to the faceting, each set of comparisons is performed separately within each summary scale.
+
+**How it works:**
+
+- `geom_signif()` adds statistical comparison brackets directly to the plot  
+- `comparisons = list(...)` defines the specific group pairs to test (e.g., Low vs Medium)  
+- `test = "t.test"` runs a Student's t-test for each comparison; you can also use `"wilcox.test"` for non-parametric data or other options like `"anova"` or `"kruskal.test"` depending on the context  
+- `map_signif_level = TRUE` controls how p-values are displayed (e.g., *, **, ***)  
+- `step_increase = 0.1` staggers the brackets vertically to prevent overlap  
+
+*Tip: type `?geom_signif` in the console to learn more about customization options.*
+
+
+```{r, fig.height=8, fig.width= 14}
+p3_2 <- ggplot(df_long %>% filter(subscale %in% c("physical_sum", "mental_sum")),
+               aes(x = education, y = score, fill = education)) +
+  geom_violin(alpha = 0.5, color = NA) +
+  geom_boxplot(width = 0.2, color = "black", alpha = 0.8) +
+  geom_signif(comparisons = list(c("Low", "Medium"),
+                                 c("Low", "High"),
+                                 c("Medium", "High")),
+              test = "t.test",
+              map_signif_level = T,
+              step_increase = 0.1) +
+  scale_fill_uchicago() +
+  facet_wrap(~ subscale, labeller = as_labeller(english_labels)) +
+  labs(title = "Summary Scores by Education",
+       x = "Education", y = "Score", fill = "Education") +
+  theme_nice()
+
+p3_2
+
+```
+
+
+## Plot 4: Histogram of MSC-12
+
+While the previous plots compared both summary scores side by side, we can also narrow the focus to a single dimension.  
+Here, we filter the dataset to include only the MSC-12 (mental summary score), and use a histogram to show the distribution of raw values.
+
+**How it works:**
+
+- `filter(subscale == "mental_sum")` selects only the MSC-12 scores for plotting  
+- `geom_histogram()` creates a histogram showing how many observations fall into each bin  
+- `binwidth = 2` controls the size of each bin on the x-axis — smaller values give more detail, larger ones smooth the shape  
+- `fill = "#A4A9AD"` sets the bar color, and `color = "white"` outlines each bar for clarity  
+
+
+
+
+```{r, fig.height=8, fig.width= 12}
+
+p4 <- ggplot(df_long %>% filter(subscale == "mental_sum"),
+             aes(x = score)) +
+  geom_histogram(binwidth = 2, fill = "#A4A9AD", color = "white") +
+  labs(title = "Distribution of MSC-12",
+       x = "Score", y = "Count") +
+  theme_nice()
+# ggsave("p4_hist_mental_sum.pdf", p4, width = 13, height = 8)
+
+p4
+```
+
+## Plot 5: Raincloud Plot by Gender
+
+After briefly focusing on the MSC-12 score alone, we now return to comparing both summary scores—this time grouped by gender.  
+To do so, we use a *raincloud plot*, which combines a density curve, boxplot, and raw data points into one compact and informative visualization.
+
+**How it works:**
+
+- `geom_rain()` creates the raincloud plot by layering three elements: a density curve, jittered points, and a boxplot  
+- The **density curve** is estimated from the data using kernel density estimation, much like `geom_violin()`. You can adjust its appearance with arguments such as:
+  - `adjust` to control smoothing (higher = smoother curve)
+  - `scale` to control width scaling (e.g., by area or count)
+  - `side` to specify which side of the axis the curve appears on  
+- `point.args` controls the appearance of the raw data points; with large datasets, a low `alpha` (e.g., 0.054) avoids overplotting. For smaller samples, increase `alpha` so points remain visible  
+- `boxplot.args` modifies the boxplot layer — e.g., `width = 0.1` keeps it compact, and `alpha = 0.9` ensures it’s clearly visible  
+- `facet_wrap(~ subscale)` separates PSC-12 and MSC-12 into their own panels  
+- Both `fill` and `color` are mapped to `gender`, and styled using the `uchicago` color palette  
+
+Raincloud plots are especially useful when you want to show **both summary statistics and the full distribution**, including the **raw data points**.  
+They are ideal for medium to large samples where standard boxplots or violins might hide important details such as spread, outliers, or uneven distributions.  
+Compared to boxplots alone, rainclouds give a richer and more transparent view of the data—particularly helpful in reports and presentations.
+
+*Note: `geom_rain()` comes from the `ggdist` package, which includes many other useful geoms for uncertainty and distribution visualization. Type `?ggdist` or visit [https://mjskay.github.io/ggdist](https://mjskay.github.io/ggdist) to learn more.*
+
+```{r, fig.height=8, fig.width= 14, warning=FALSE}
+
+p5 <- ggplot(df_long %>% filter(subscale %in% c("physical_sum", "mental_sum")),
+             aes(x = gender, y = score, fill = gender, color = gender)) +
+  geom_rain(alpha = 0.7,
+            point.args = list(alpha = 0.05, size = 3),
+            boxplot.args = list(color = "black", alpha = 0.6, width = 0.1)) +
+  scale_fill_uchicago() +
+  scale_color_uchicago() +
+  facet_wrap(~ subscale, labeller = as_labeller(english_labels)) +
+  labs(title = "Summary Scores by Gender",
+       x = "Gender", y = "Score") +
+  theme_nice()
+# facet_wrap(~ subscale, labeller = as_labeller(norwegian_labels)) # optional Norwegian labels
+# ggsave("p5_raincloud_summary_gender_facet.pdf", p5, width = 13, height = 8)
+
+p5
+```
+
+
+
+
+## Plot 6: Raincloud Plot by Treatment Status with Group Means
+
+We now apply the same raincloud approach to a different grouping variable: treatment status.  
+In addition to visualizing the full distribution, we enhance interpretability by overlaying a reference line for each group’s mean score.  
+This makes it easier to visually compare average scores across groups within each summary scale.
+
+**How it works:**
+
+- `geom_rain()` works as before, combining raw points, boxplots, and density curves  
+- `boxplot.args.pos` nudges the boxplots slightly to the side for better separation between overlapping elements  
+- `stat_summary()` adds dashed reference lines for the group means using `geom = "hline"`  
+- `yintercept = ..y..` extracts the mean value from each group and applies it within each facet  
+- `theme(legend.position = "none")` removes the legend — this can be useful when group labels are already shown on the x-axis and removing the legend gives a cleaner visual appearance  
+- `facet_wrap(~ subscale)` again splits the plot into PSC-12 and MSC-12 panels  
+
+*Tip: If your data is skewed or contains outliers, you can replace `fun = mean` with `fun = median` to show group medians instead.*
+
+```{r, fig.height=8, fig.width= 14, warning=F}
+p6 <- ggplot(df_long %>% filter(subscale %in% c("physical_sum", "mental_sum")),
+             aes(x = treatment_status, y = score,
+                 fill = treatment_status, color = treatment_status)) +
+  geom_rain(
+    point.args = list(alpha = 0.04, size = 3),
+    boxplot.args = list(color = "black", outlier.shape = NA, alpha = 0.7, width = 0.1),
+    boxplot.args.pos = list(position = ggpp::position_dodgenudge(x = 0.08, width = 0.12)),
+    violin.args = list(alpha = 0.6)
+  ) +
+  stat_summary(fun = mean, geom = "hline",
+               aes(yintercept = ..y.., group = treatment_status, color = treatment_status),
+               linewidth = 0.4, linetype = "dashed", show.legend = FALSE) +
+  scale_fill_uchicago() +
+  scale_color_uchicago() +
+  facet_wrap(~ subscale, labeller = as_labeller(english_labels)) +
+  labs(title = "Summary Scores by Treatment Status (with Group Means)",
+       x = "Treatment Status", y = "Score", colour = "", fill = "") +
+  theme_nice() +
+  theme(legend.position = "none")
+# facet_wrap(~ subscale, labeller = as_labeller(norwegian_labels)) # optional Norwegian labels
+# ggsave("p6_treatment_raincloud_ref.pdf", p6, width = 13, height = 8)
+
+p6
+
+```
+
+
+
+## Plot 7: Boxplot by Age Group
+
+While raincloud plots offer rich visual detail, there are situations where a more compact summary is preferred—especially when the number of groups increases.  
+Here, we use a standard boxplot to compare summary scores across age groups, focusing on medians and variability within each group.
+
+Boxplots are space-efficient and easy to interpret, great for getting a quick overview of score distributions across multiple categories.
+
+**How it works:**
+
+- `geom_boxplot()` displays the distribution of scores within each age group using medians, quartiles, and potential outliers  
+- `alpha = 0.7` makes the fill semi-transparent for a softer appearance  
+- `scale_fill_viridis_d(option = "cividis")` applies a perceptually uniform, colorblind-friendly palette  
+
+
+```{r, fig.height=8, fig.width= 14}
+p7 <- ggplot(df_long %>% filter(subscale %in% c("physical_sum", "mental_sum")),
+             aes(x = age_group, y = score, fill = age_group)) +
+  geom_boxplot(color = "black", alpha = 0.7) +
+  scale_fill_viridis_d(option = "cividis") +
+  facet_wrap(~ subscale, labeller = as_labeller(english_labels)) +
+  labs(title = "Summary Scores by Age Group",
+       x = "Age Group", y = "Score") +
+  theme_nice()
+# facet_wrap(~ subscale, labeller = as_labeller(norwegian_labels)) # optional
+# ggsave("p7_boxplot_age_summary.pdf", p7, width = 13, height = 8)
+
+p7
+```
+
+
+
+## Plot 8: Trend Over Time by Gender (Observed Means)
+
+In the next set of plots, we shift focus from cross-sectional group differences to changes over time.  
+Visualizing trends can reveal whether health scores improve, decline, or remain stable across years for different groups.
+
+We start with a simple approach by plotting the **observed group means** for each year. Here, the PSC-12 and MSC-12 scores are shown over time for males and females.
+
+**How it works:**
+
+- `stat_summary(fun = mean, geom = "line")` draws a line connecting the yearly group means  
+- `stat_summary(fun = mean, geom = "point")` adds larger points to mark each mean explicitly  
+- `color = gender` maps group membership to color, using the `uchicago` palette for clarity  
+- `facet_wrap(~ subscale)` splits the plot by summary scale  
+
+```{r, fig.height=8, fig.width= 14}
+p8 <- ggplot(df_long %>% filter(subscale %in% c("physical_sum", "mental_sum")),
+             aes(x = year, y = score, color = gender)) +
+  stat_summary(fun = mean, geom = "line", linewidth = 1) +
+  stat_summary(fun = mean, geom = "point", size = 5) +
+  facet_wrap(~ subscale, labeller = as_labeller(english_labels)) +
+  scale_color_uchicago() +
+  labs(title = "Summary Scores Over Time by Gender",
+       x = "Year", y = "Score") +
+  theme_nice()
+# ggsave("p8_trend_gender_summary.pdf", p8, width = 13, height = 8)
+
+p8
+```
+
+
+
+## Plot 9: Loess Trend by Age Group and Gender (Summary Scores)
+
+This plot extends our trend analysis by showing how summary scores evolve over time across both **age group** and **gender**.  
+By faceting by gender and using color to distinguish age groups, we can observe interaction patterns—such as whether trends differ by age within each gender.
+
+**How it works:**
+
+- `filter(subscale %in% c("physical_sum", "mental_sum"))` limits the plot to the two summary scores  
+- `geom_smooth(method = "loess", se = TRUE)` draws smooth, non-linear trends with shaded confidence intervals  
+- `color = age_group` assigns different colors to age groups  
+- `facet_grid(rows = vars(gender), cols = vars(subscale))` creates a two-dimensional panel layout—one column per summary score, and one row per gender  
+- `labeller = labeller(subscale = english_labels)` applies clean labels to the facet strips  
+- `coord_cartesian(ylim = c(20, 75))` constrains the y-axis to a practical range  
+-  `guides(colour = guide_legend(override.aes = list(fill = NA)))` overrides the default legend appearance by removing any fill color in legend keys associated with color. This prevents the legend from showing a gray       background, resulting in a clean, transparent background for legend items.
+
+```{r, fig.height=8, fig.width= 14}
+p9 <- ggplot(df_long %>% filter(subscale %in% c("physical_sum", "mental_sum")),
+             aes(x = year, y = score, color = age_group)) +
+  geom_smooth(method = "loess", se = TRUE, alpha = 0.4, linewidth = 0.8) +
+  facet_grid(rows = vars(gender), cols = vars(subscale),
+             labeller = labeller(subscale = english_labels)) +
+  scale_color_uchicago() +
+  labs(title = "Summary Scores Over Time by Age Group and Gender (Loess)",
+       x = "Year", y = "Score", colour = "Age groups") +
+  coord_cartesian(ylim = c(20, 75)) +
+  theme_nice() +
+  guides(colour = guide_legend(override.aes = list(fill = NA)))
+# facet_grid(rows = vars(gender), cols = vars(subscale),
+#            labeller = labeller(subscale = norwegian_labels)) # optional Norwegian labels
+# ggsave("p9_trend_loess_age_gender_summary.pdf", p9, width = 13, height = 8)
+
+p9
+
+```
+
+
+# Subdomain-Level Visualizations
+
+Up to this point, we’ve focused on the two summary scores of the RAND-12 instrument: PSC-12 and MSC-12.  
+In the following plots, we explore selected subdomains that make up the summary scores, allowing for a more detailed understanding of patterns across specific health dimensions.
+
+We start with two mental health-related subdomains and compare their distributions across diagnostic groups, using both boxplots and raincloud plots.  
+We then close the guide with a loess-based trend visualization covering all eight subdomains.
+
+## Plot 10: Boxplot by Diagnosis (Mental Subdomains)
+
+This plot shows how two specific mental health subdomains—Vitality (VT) and Social Functioning (SF)—vary across diagnostic groups.  
+We use a standard boxplot for each group and subdomain, with flipped coordinates for easier reading.
+
+**How it works:**
+
+- `filter(subscale %in% c("VT", "SF"))` selects only the relevant mental health subdomains for plotting  
+- `aes(x = diagnosis, y = score)` maps the diagnostic categories to the x-axis and score to the y-axis  
+- `geom_boxplot()` visualizes the distribution within each group, including median, quartiles, and potential outliers  
+- `coord_flip()` rotates the plot for better readability of long diagnosis labels  
+- `theme(legend.position = "none")` removes the legend, as the groupings are already shown on the x-axis  
+
+```{r, fig.height=8, fig.width= 14}
+p10 <- ggplot(df_long %>% filter(subscale %in% c("VT", "SF")),
+             aes(x = diagnosis, y = score, fill = diagnosis)) +
+  geom_boxplot(color = "black", alpha = 0.8) +
+  scale_fill_viridis_d(option = "cividis") +
+  facet_wrap(~ subscale, labeller = as_labeller(english_labels)) +
+  labs(title = "Mental Health Subdomains by Diagnosis",
+       x = "Diagnosis", y = "Score") +
+  theme_nice() +
+  coord_flip() +
+  theme(legend.position = "none")
+# ggsave("p10_boxplot_diagnosis_mental.pdf", p9, width = 13, height = 8)
+
+p10
+```
+
+
+## Plot 11: Raincloud Plot by Diagnosis (Mental Subdomains)
+
+To complement the boxplot above, we now use a raincloud plot to show the same subdomains—Vitality and Social Functioning—but with greater detail.  
+This visualization combines individual data points, smoothed density shapes, and boxplots, offering a richer look at how scores are distributed within each diagnostic group.
+
+**How it works:**
+
+- `filter(subscale %in% c("VT", "SF"))` again restricts the data to the two mental health subdomains  
+- `geom_rain()` overlays three layers: raw points (`point.args`), boxplots (`boxplot.args`), and density curves  
+- `point.args = list(alpha = 0.05)` ensures that individual points are shown without overwhelming the plot  
+- `geom_hline(yintercept = 50)` adds a dashed reference line at 50, useful if scores are standardized or normed  
+- `coord_flip()` rotates the plot horizontally to improve label readability  
+- `theme(legend.position = "none")` hides the legend since the x-axis already shows diagnostic groups  
+
+
+
+```{r, fig.height=8, fig.width= 8}
+p11 <- ggplot(df_long %>% filter(subscale %in% c("VT", "SF")),
+              aes(x = diagnosis, y = score, fill = diagnosis)) +
+  geom_rain(alpha = 0.6,
+            point.args = list(alpha = 0.05, shape = 21, size = 1.6),
+            boxplot.args = list(color = "black", alpha = 0.8)) +
+  scale_fill_viridis_d(option = "cividis") +
+  facet_wrap(~ subscale, labeller = as_labeller(english_labels)) +
+  labs(title = "Mental Subdomains by Diagnosis (Raincloud)",
+       x = "Diagnosis", y = "Score") +
+  theme_nice() +
+  coord_flip() +
+  geom_hline(yintercept = 50, linetype = "dashed") +
+  theme(legend.position = "none")
+
+p11
+
+# ggsave("p11_raincloud_diagnosis_mental.pdf", p11, width = 13, height = 8)
+
+```
+
+
+## Plot 12: Loess Trend by Education (All Subdomains)
+
+To conclude the guide, we plot trends over time for all eight RAND-12 subdomains.  
+This visualization helps reveal how physical and mental health domains vary by education level across survey years.
+
+We use a loess smoother to highlight overall patterns without assuming a linear trend, and we restrict the y-axis to focus on the range where most scores are expected to fall.
+
+**How it works:**
+
+- `filter(subscale %in% ...)` selects all eight subdomains for plotting  
+  *(This step isn't strictly necessary if your dataset already contains only these subscales, but it's useful for clarity)*  
+- `geom_smooth(method = "loess", se = TRUE)` adds a nonparametric trend line for each education group, with a shaded confidence band  
+- `color = education` distinguishes groups visually using the `uchicago` palette  
+- `facet_wrap(~ subscale)` shows one panel per subdomain, making it easy to compare patterns across dimensions  
+- `coord_cartesian(ylim = c(0, 80))` keeps the y-axis fixed between 0 and 80 for all panels  
+
+
+```{r, fig.height=8, fig.width= 14}
+p12 <- ggplot(df_long %>% filter(subscale %in% c("PF", "RP", "BP", "GH", "VT", "SF", "RE", "MH")),
+              aes(x = year, y = score, color = education)) +
+  geom_smooth(method = "loess", se = TRUE, alpha = 0.5, linewidth = 0.8) +
+  facet_wrap(~ subscale, labeller = as_labeller(english_labels)) +
+  scale_color_jama() +
+  labs(title = "Subdomain Scores Over Time by Education",
+       x = "Year", y = "Score", colour = "Education") +
+  coord_cartesian(ylim = c(20, 80)) +
+  theme_nice() +
+  guides(colour = guide_legend(override.aes = list(fill = NA)))
+# ggsave("p12_trend_loess_subdomains.pdf", p12, width = 13, height = 8)
+
+p12
+```
+
+# Final Notes: Customizing Your ggplot Visualizations
+
+All plots in this guide use **`ggplot2`** with a consistent clean style via the custom theme `theme_nice()`.  
+Grouped comparisons are shown using color fills or outlines, and many aesthetic choices are fully customizable.  
+Below are some helpful tips and resources for adapting the visualizations to your own needs.
+
+## Themes
+
+We use `theme_nice()` throughout the guide for a clean and readable look.  
+To switch to another built-in ggplot theme, simply replace it with:
+
+- `theme_bw()` – basic black and white theme  
+- `theme_classic()` – minimal axes with no grid  
+- `theme_minimal()` – clean layout with light grid lines  
+- `theme_gray()` – default ggplot theme  
+- `theme_void()` – completely blank (good for custom plots or maps)
+
+
+## Color Palettes
+
+Most plots use the **UChicago palette** from the `ggsci` package for readability.  
+You can change the palette depending on your audience or style preferences.
+
+### From `ggsci`
+
+- `scale_fill_uchicago()`  
+- `scale_color_uchicago()`  
+
+Other options include:
+
+- `scale_fill_npg()` 
+- `scale_fill_lancet()`  
+- `scale_fill_jco()`  
+- `scale_fill_nejm()`  
+- `scale_fill_d3()`, `scale_fill_simpsons()`, `scale_fill_tron()`, `scale_fill_futurama()`, etc.  
+
+(Use the corresponding `scale_color_...()` versions for outlines)
+
+### From `viridis` (colorblind-friendly)
+
+- `scale_fill_viridis_d(option = \"cividis\")`  
+- `scale_fill_viridis_d(option = \"magma\")`  
+- `scale_fill_viridis_d(option = \"plasma\")`  
+- `scale_fill_viridis_d(option = \"inferno\")`  
+- `scale_fill_viridis_d(option = \"viridis\")`  
+
+
+## Manually Setting Colors
+
+To set exact colors, use `scale_fill_manual()` and `scale_color_manual()`.
+
+**Examples:**
+
+
+```{r, eval = FALSE}
+
+
+scale_fill_manual(values = c("Low" = "#E41A1C", "Medium" = "#377EB8", "High" = "#4DAF4A"))
+scale_color_manual(values = c("Male" = "#984EA3", "Female" = "#FF7F00"))
+
+```
+
+
+
+### Color Resources
+
+- [colorbrewer2.org](https://colorbrewer2.org/) – for palettes by data type  
+- [coolors.co](https://coolors.co/) – for custom palette building  
+- [r-graph-gallery.com](https://r-graph-gallery.com/ggplot2-color.html) – ggplot palette examples  
+
+
+## Facet Labels Language
+
+All plots use English labels by default.  
+To switch to Norwegian, update the labeller line like this:
+
+`facet_wrap(~ subscale, labeller = as_labeller(norwegian_labels))`
+
+
+
+## Saving Figures
+
+All plots are saved as named objects (`p1`, `p2`, ..., `p13`).  
+
+To export them:
+
+- `ggsave("plotname.pdf", p1, width = 13, height = 8)`
+- `ggsave("plotname.png", p1, width = 13, height = 8, dpi = 1000)`
+
+
+**Tip:** All export lines are already included and commented out in the code blocks above.
+
+
+## Further Resources
+
+- [ggplot2 documentation](https://ggplot2.tidyverse.org/) 
+- [ggplot2 graph gallery](https://r-graph-gallery.com/ggplot2-package.html)
+
