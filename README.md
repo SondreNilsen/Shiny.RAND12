@@ -201,6 +201,7 @@ If you prefer working directly in R, you can use a standalone script to create m
 [RAND12_user_manual.html](https://sondrenilsen.github.io/Shiny.RAND12/RAND12_user_manual.html)
 
 
+
 ------------------------------------------------------------------------
 ## License
 

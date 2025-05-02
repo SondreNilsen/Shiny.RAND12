@@ -1,5 +1,3 @@
-norwegian_labels
-
 # ======================================================
 # Setup; load packages, set theme, simulate some data
 # ======================================================
